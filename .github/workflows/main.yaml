@@ -13,6 +13,8 @@ jobs:
             env:
                 WEBRTC_COMMIT_ID: a2e33ed8808384ed46adb5ee3e0f8a2932645655
             run: |
+                sudo apt update
+                sudo apt -y install g++-12 g++ libgtk-3-dev
                 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
                 export PATH=$PWD/depot_tools:$PATH
                 mkdir webrtc
