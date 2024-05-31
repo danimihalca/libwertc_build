@@ -9,26 +9,64 @@ jobs:
     build:
         name: Build WebRTC
         runs-on: ubuntu-latest
+        env:
+          WEBRTC_COMMIT_ID: a2e33ed8808384ed46adb5ee3e0f8a2932645655
 
         steps:
+          - name: Checkout paths
+            uses: actions/checkout@v4
+            with:
+              path: paths
+
           - name: "Fetch sources"
-            env:
-                WEBRTC_COMMIT_ID: a2e33ed8808384ed46adb5ee3e0f8a2932645655
             run: |
                 sudo apt update
                 sudo apt -y install g++-12 g++ libgtk-3-dev
                 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
                 export PATH=$PWD/depot_tools:$PATH
                 mkdir webrtc
+                mkdir -p dist/{include,lib}
                 cd webrtc
                 fetch --no-hooks webrtc
                 cd src
                 git checkout ${{ env.WEBRTC_COMMIT_ID }}
                 cd ..
                 gclient sync -n
+
+          - name: "Prepare release headers"
+            run: |
+                rsync -r --files-from=paths/include_paths.txt webrtc/src/ dist/include/webrtc/
+                tar -czvf rel_inc.tar.gz dist/include/
+
           - name: "Build release"
+            if: false
             run: |
                 export PATH=$PWD/depot_tools:$PATH
                 cd webrtc/src
-                gn gen out/Release --args='rtc_use_dummy_audio_file_devices=true is_debug=false rtc_include_tests=false treat_warnings_as_errors=false use_rtti=true is_component_build=false enable_iterator_debugging=false use_sysroot=false use_custom_libcxx=false use_custom_libcxx_for_host=false is_clang=false rtc_build_tools=false rtc_enable_symbol_export=true'
+                gn gen out/Release \
+                --args='rtc_use_dummy_audio_file_devices=true is_debug=false rtc_include_tests=false \
+                treat_warnings_as_errors=false use_rtti=true is_component_build=false enable_iterator_debugging=false \
+                use_sysroot=false use_custom_libcxx=false use_custom_libcxx_for_host=false is_clang=false rtc_build_tools=false \
+                rtc_enable_symbol_export=true'
                 autoninja -C out/Release builtin_video_encoder_factory builtin_video_decoder_factory webrtc rtc_internal_video_codecs fake_video_codecs
+
+          - name: Create release
+            uses: actions/create-release@v1
+            id: create_release
+            env:
+              GITHUB_TOKEN: ${{ github.token }}
+            with:
+              draft: false
+              prerelease: false
+              release_name: ${{ env.WEBRTC_COMMIT_ID }}
+              tag_name: ${{ env.WEBRTC_COMMIT_ID }}
+    
+          - name: Upload release headers
+            uses: actions/upload-release-asset@v1
+            env:
+              GITHUB_TOKEN: ${{ github.token }}
+            with:
+              upload_url: ${{ steps.create_release.outputs.upload_url }}
+              asset_path: ./rel_inc.tar.gz
+              asset_name: rel_inc.tar.gz
+              asset_content_type: application/gzip
