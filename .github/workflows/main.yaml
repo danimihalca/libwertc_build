@@ -36,10 +36,9 @@ jobs:
           - name: "Prepare release headers"
             run: |
                 rsync -r --files-from=paths/include_paths.txt webrtc/src/ dist/include/webrtc/
-                tar -czvf rel_inc.tar.gz dist/include/
+                tar -czvf rel_inc.tar.gz -C dist/include/ .
 
           - name: "Build release"
-            if: false
             run: |
                 export PATH=$PWD/depot_tools:$PATH
                 cd webrtc/src
@@ -49,6 +48,11 @@ jobs:
                 use_sysroot=false use_custom_libcxx=false use_custom_libcxx_for_host=false is_clang=false rtc_build_tools=false \
                 rtc_enable_symbol_export=true'
                 autoninja -C out/Release builtin_video_encoder_factory builtin_video_decoder_factory webrtc rtc_internal_video_codecs fake_video_codecs
+
+          - name: "Prepare release libraries"
+            run: |
+                rsync -r --files-from=paths/lib_paths.txt webrtc/src/out/Release/obj dist/lib/
+                tar -czvf rel_lib.tar.gz -C dist/lib .
 
           - name: Create release
             uses: actions/create-release@v1
@@ -69,4 +73,14 @@ jobs:
               upload_url: ${{ steps.create_release.outputs.upload_url }}
               asset_path: ./rel_inc.tar.gz
               asset_name: rel_inc.tar.gz
+              asset_content_type: application/gzip
+
+          - name: Upload release libraries
+            uses: actions/upload-release-asset@v1
+            env:
+              GITHUB_TOKEN: ${{ github.token }}
+            with:
+              upload_url: ${{ steps.create_release.outputs.upload_url }}
+              asset_path: ./rel_lib.tar.gz
+              asset_name: rel_lib.tar.gz
               asset_content_type: application/gzip

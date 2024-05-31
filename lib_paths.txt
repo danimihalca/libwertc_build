@@ -1,0 +1,6 @@
+api/video_codecs/libbuiltin_video_decoder_factory.a
+api/video_codecs/libbuiltin_video_encoder_factory.a
+media/librtc_internal_video_codecs.a
+media/librtc_simulcast_encoder_adapter.a
+test/libfake_video_codecs.a
+libwebrtc.a
