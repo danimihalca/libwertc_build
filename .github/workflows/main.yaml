@@ -3,6 +3,8 @@ name: Build WebRTC
 on:
   workflow_dispatch:
 
+permissions: write-all
+
 jobs:
     build:
         name: Build WebRTC
