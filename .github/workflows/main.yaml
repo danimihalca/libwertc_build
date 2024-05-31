@@ -43,10 +43,7 @@ jobs:
                 export PATH=$PWD/depot_tools:$PATH
                 cd webrtc/src
                 gn gen out/Release \
-                --args='rtc_use_dummy_audio_file_devices=true is_debug=false rtc_include_tests=false \
-                treat_warnings_as_errors=false use_rtti=true is_component_build=false enable_iterator_debugging=false \
-                use_sysroot=false use_custom_libcxx=false use_custom_libcxx_for_host=false is_clang=false rtc_build_tools=false \
-                rtc_enable_symbol_export=true'
+                --args='rtc_use_dummy_audio_file_devices=true is_debug=false rtc_include_tests=false treat_warnings_as_errors=false use_rtti=true is_component_build=false enable_iterator_debugging=false use_sysroot=false use_custom_libcxx=false use_custom_libcxx_for_host=false is_clang=false rtc_build_tools=false rtc_enable_symbol_export=true'
                 autoninja -C out/Release builtin_video_encoder_factory builtin_video_decoder_factory webrtc rtc_internal_video_codecs fake_video_codecs
 
           - name: "Prepare release libraries"
